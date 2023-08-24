@@ -6,14 +6,7 @@ from .serializers import AttendanceStatusSerializer
 from bson.objectid import ObjectId
 import json
 from datetime import datetime,timedelta
-from django.http import HttpResponse
-from django.shortcuts import render
 
-
-
-
-client = MongoClient("mongodb://65.2.116.84:27017/") 
-db = client["production"] 
 class AttendanceStatusView(APIView):
     def post(self, request, *args, **kwargs):
         lecture = ObjectId(request.data.get('lecture_id'))
@@ -49,27 +42,18 @@ class AttendanceStatusView(APIView):
 
 class AttendanceStats(APIView):
     def post(self, request, *args, **kwargs):
-        specified_start_date = None
-        specified_end_date = None
+        specified_date = None
         phase_id = None
         client_id = ObjectId(request.data.get("client_id"))
         phase_id = request.data.get("phase_id")
-        specified_start_date = request.data.get("start_date")
-        specified_end_date = request.data.get("end_date")
-        print(specified_start_date)
-        print(specified_end_date)
-        if phase_id == '' or phase_id == '___NONE___':
-            phase_id = None
-        
-        if specified_start_date == '':
-            specified_start_date = None
-            
-        if specified_end_date == '':
-            specified_end_date = None
-        
+        specified_date = request.data.get("date")
         client = MongoClient("mongodb://65.2.116.84:27017/") 
+        print("success")
+        print(client_id)
+        print(phase_id)
+        print(specified_date)
         db = client["production"]  
-        
+        print("done")
         pipeline = [
             {
                 '$match': {
@@ -77,21 +61,12 @@ class AttendanceStats(APIView):
                 }
             }
         ]
-        
         if phase_id is not None:
             pipeline[0]['$match']['phase'] = ObjectId(phase_id)
-        
-        if specified_start_date is not None:
+        if specified_date is not None:
             pipeline.append({ "$addFields": { "dateStr": { "$dateToString": { "format": "%Y-%m-%d", "date": "$date" } } } })
-            date_match = {
-                "$gte": specified_start_date
-            }
-            
-            if specified_end_date is not None:
-                date_match["$lte"] = specified_end_date
-            print(date_match)  
-            pipeline.append({ "$match": { "dateStr": date_match } })
-        
+            pipeline.append({ "$match": { "dateStr": specified_date } })
+
         pipeline.extend([
             {
                 '$lookup': {
@@ -103,14 +78,14 @@ class AttendanceStats(APIView):
             },
             {
                 '$project': {
-                    'result.stats': 1,
-                    'date':1
+                    'result.stats': 1
                 }
             }
         ])
         
+
         result = list(db.attendances.aggregate(pipeline))
-        # print(result)
+        print(result)
         if result:
             response=[]
             print("enter")
@@ -124,43 +99,7 @@ class AttendanceStats(APIView):
 
 
 
-def clientSelect(request):
-    # client_id=request.GET.get('client_id')
-    client_id=ObjectId("63dca9c42b23700d59efd683")
-    pipeline = [
-    {
-        '$match': {
-            '_id': client_id
-        }
-    },
-    {
-        '$unwind': '$phases'
-    },
-    {
-        '$lookup': {
-            'from': 'phases',
-            'localField': 'phases',
-            'foreignField': '_id',
-            'as': 'phase_info'
-        }
-    },
-    {
-        '$unwind': '$phase_info'
-    },
-    {
-        '$project': {
-            '_id': 0,
-            'phase_id': '$phase_info._id',
-            'phase_name': '$phase_info.name'
-        }
-    }
-]
 
-    result = list(db.clients.aggregate(pipeline))
-    print(result)
-
-
-    return render(request, 'AttendanceStats.html', {'phases': result})
 
 
 
