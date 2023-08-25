@@ -8,6 +8,12 @@
     <script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
     <script src="https://code.highcharts.com/stock/highstock.js"></script>
     <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
+    <script src="https://code.highcharts.com/modules/drilldown.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -58,6 +64,9 @@
             <label for="phase">Class Name:</label>
             <select name="phase" id="phase" required>
                 <option value="" selected disabled>Select Class</option>
+                <option value="___NONE___">Show for all Class</option>
+
+
                 {% for phase in phases %}
                 {% if phase.phase_name != "Shanti Asiatic School - Demo" %}
                 <option value="{{ phase.phase_id }}">{{ phase.phase_name }}</option>
@@ -146,72 +155,183 @@
                     client_id: client_id,
                 },
                 success: function (response) {
-                    if (response.message ===  "No attendance data found for the specified criteria.") {
-                        
-                        document.getElementById("chart-container").innerHTML="<h1 align='center'>No data available</h1>";
-                        
+
+                    if (response.message === "No attendance data found for the specified criteria.") {
+
+                        document.getElementById("chart-container").innerHTML = "<h1 align='center'>No data available</h1>";
+
                     }
 
-                    var resultContainer = document.getElementById("resultContainer");
-                    // resultContainer.innerHTML = JSON.stringify(response, null, 1);
-                    var categories = [];
-                    var presentData = [];
-                    var absentData = [];
+                    if (document.getElementById("phase").value == "___NONE___") {
+                        const aggregatedStats = {};
 
-                    for (var i = 0; i < response.attendance.length; i++) {
-                        var date = response.attendance[i].date.split('T')[0];
-                        var present = response.attendance[i].result[0].stats.P;
-                        var absent = response.attendance[i].result[0].stats.A;
+                        const attendanceData = response.attendance;
 
-                        categories.push(date);
-                        presentData.push(present);
-                        absentData.push(absent);
-                        // console.log(categories); 
-                        // console.log(presentData);
-                        // console.log(absentData);
-                    }
+                        attendanceData.forEach(entry => {
+                            const name = entry.phasename[0].name;
+                            const stats = entry.result[0].stats;
 
-                    // Create the chart
-                    Highcharts.chart('chart-container', {
-                        chart: {
-                            type: 'column',
-
-                        },
-                        title: {
-                            text: 'Attendance Chart'
-                        },
-                        xAxis: {
-                            categories: categories,
-                            min: 0,
-                            max: categories.length >= 10 ? 10 : categories.length - 1,
-                            scrollbar: {
-                                enabled: true
+                            if (aggregatedStats[name]) {
+                                for (const key in stats) {
+                                    if (stats.hasOwnProperty(key)) {
+                                        aggregatedStats[name][key] += stats[key];
+                                    }
+                                }
+                            } else {
+                                aggregatedStats[name] = { ...stats };
                             }
-                        },
-                        yAxis: {
+                        });
+
+                        const aggregatedData = Object.keys(aggregatedStats).map(name => ({
+                            name,
+                            stats: aggregatedStats[name]
+                        }));
+
+                        const presentPercentages = aggregatedData.map(entry => {
+                            const total = entry.stats.P + entry.stats.A;
+                            return {
+                                name: entry.name,
+                                y: (entry.stats.P / total) * 100,
+                                drilldown: entry.name
+                            };
+                        });
+
+                        // Create the chart
+                        Highcharts.chart('chart-container', {
+                            chart: {
+                                type: 'pie',
+                              
+                            },
                             title: {
-                                text: 'Number of Students'
+                                text: 'Present Percentage by Class'
+                            },
+                            series: [
+                                {
+                                    name: 'Classes',
+                                    colorByPoint: true,
+                                    data: presentPercentages
+                                }
+                            ],
+                            tooltip: {
+                                pointFormat: '{series.name}: <b>{point.y:.2f}</b>'
+                            },
+                            legend: {
+                                enabled: true, // Set this to true to display the legend
+                                align: 'right',
+                                layout: 'vertical',
+                                verticalAlign: 'middle'
+                            },
+                            drilldown: {
+                                series: aggregatedData.map(entry => ({
+                                    name: entry.name,
+                                    id: entry.name,
+                                    data: [
+                                        {
+                                            name: 'Present',
+                                            y: entry.stats.P,
+                                            count: entry.stats.P
+                                        },
+                                        {
+                                            name: 'Absent',
+                                            y: entry.stats.A,
+                                            count: entry.stats.A
+                                        }
+
+                                    ]
+                                }))
+                            },
+                            drillUpButton: {
+                                relativeTo: 'spacingBox',
+                                position: {
+                                    y: 0,
+                                    x: 0
+                                },
+                                theme: {
+                                    fill: 'white',
+                                    'stroke-width': 1,
+                                    stroke: 'silver',
+                                    r: 0,
+                                    states: {
+                                        hover: {
+                                            fill: '#a4edba'
+                                        },
+                                        select: {
+                                            stroke: '#039',
+                                            fill: '#a4edba'
+                                        }
+                                    }
+                                }
                             }
-                        },
 
-                        legend: {
-                            reversed: true
-                        },
-                        plotOptions: {
-                            bar: {
-                                stacking: 'normal'
-                            }
-                        },
-                        series: [{
-                            name: 'Present',
-                            data: presentData
-                        }, {
-                            name: 'Absent',
-                            data: absentData
-                        }]
-                    });
+                        });
+
+                        // var resultContainer = document.getElementById("chart-container");
+                        // resultContainer.innerHTML = JSON.stringify(aggregatedResponse, null, 1);
+                    }
+
+                    else {
 
 
+
+                        var categories = [];
+                        var presentData = [];
+                        var absentData = [];
+
+                        for (var i = 0; i < response.attendance.length; i++) {
+                            var date = response.attendance[i].date.split('T')[0];
+                            var present = response.attendance[i].result[0].stats.P;
+                            var absent = response.attendance[i].result[0].stats.A;
+
+                            categories.push(date);
+                            presentData.push(present);
+                            absentData.push(absent);
+                            // console.log(categories); 
+                            // console.log(presentData);
+                            // console.log(absentData);
+                        }
+
+                        // Create the chart
+                        Highcharts.chart('chart-container', {
+                            chart: {
+                                type: 'column',
+
+                            },
+                            title: {
+                                text: 'Attendance Chart'
+                            },
+                            xAxis: {
+                                categories: categories,
+                                min: 0,
+                                max: categories.length >= 10 ? 10 : categories.length - 1,
+                                scrollbar: {
+                                    enabled: true
+                                }
+                            },
+                            yAxis: {
+                                title: {
+                                    text: 'Number of Students'
+                                }
+                            },
+
+                            legend: {
+                                reversed: true
+                            },
+                            plotOptions: {
+                                bar: {
+                                    stacking: 'normal'
+                                }
+                            },
+                            series: [{
+                                name: 'Present',
+                                data: presentData
+                            }, {
+                                name: 'Absent',
+                                data: absentData
+                            }]
+                        });
+
+
+                    }
                 }
             });
         });

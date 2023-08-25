@@ -101,10 +101,26 @@ class AttendanceStats(APIView):
                     'as': 'result'
                 }
             },
+             {
+                '$lookup': {
+                    'from': 'phases', 
+                    'localField': 'phase', 
+                    'foreignField': '_id', 
+                    'as': 'phasename'
+                }
+            },
+                {
+            '$addFields': {
+                'phaseAsString': { '$toString': '$phase' }
+            }
+    },
             {
                 '$project': {
                     'result.stats': 1,
-                    'date':1
+                    'date':1,
+                    'phaseAsString':1,
+                    'phasename.name':1,
+
                 }
             }
         ])
@@ -117,6 +133,7 @@ class AttendanceStats(APIView):
             for res in result:
                 res['_id']=str(res['_id'])
                 response.append(res)
+            print(response)
             return Response({"attendance": response})
         else:
             return Response({"message": "No attendance data found for the specified criteria."})
@@ -157,7 +174,7 @@ def clientSelect(request):
 ]
 
     result = list(db.clients.aggregate(pipeline))
-    print(result)
+    # print(result)
 
 
     return render(request, 'AttendanceStats.html', {'phases': result})
