@@ -53,11 +53,12 @@ class AttendanceStats(APIView):
         specified_end_date = None
         phase_id = None
         client_id = ObjectId(request.data.get("client_id"))
+        
         phase_id = request.data.get("phase_id")
         specified_start_date = request.data.get("start_date")
         specified_end_date = request.data.get("end_date")
-        print(specified_start_date)
-        print(specified_end_date)
+        # print(specified_start_date)
+        # print(specified_end_date)
         if phase_id == '' or phase_id == '___NONE___':
             phase_id = None
         
@@ -133,7 +134,7 @@ class AttendanceStats(APIView):
             for res in result:
                 res['_id']=str(res['_id'])
                 response.append(res)
-            print(response)
+            # print(response)
             return Response({"attendance": response})
         else:
             return Response({"message": "No attendance data found for the specified criteria."})
@@ -143,11 +144,13 @@ class AttendanceStats(APIView):
 
 def clientSelect(request):
     # client_id=request.GET.get('client_id')
-    client_id=ObjectId("63dca9c42b23700d59efd683")
+    client_id=request.GET.get("client_id")
+    print(client_id)
+    
     pipeline = [
     {
         '$match': {
-            '_id': client_id
+            '_id': ObjectId(client_id)
         }
     },
     {
@@ -177,7 +180,7 @@ def clientSelect(request):
     # print(result)
 
 
-    return render(request, 'AttendanceStats.html', {'phases': result})
+    return render(request, 'AttendanceStats.html', {'phases': result,'client_id':client_id})
 
 
 

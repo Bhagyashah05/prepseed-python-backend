@@ -62,6 +62,7 @@
         <h2>Class Attendance Stats</h2>
         <form id="attendanceForm">
             <label for="phase">Class Name:</label>
+            <label for="client" id="client_id" style="display: none;">{{client_id}}</label>
             <select name="phase" id="phase" required>
                 <option value="" selected disabled>Select Class</option>
                 <option value="___NONE___">Show for all Class</option>
@@ -96,13 +97,34 @@
     </div>
     <div id="chart-container"></div>
     <div id="pagination"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     <script>
         document.getElementById("attendanceForm").addEventListener("submit", function (event) {
+            
             document.getElementById("chart-container").innerHTML = "";
             event.preventDefault();
             var phase_id = document.getElementById("phase").value;
             var dateOption = document.getElementById("date").value;
-            var client_id = "63dca9c42b23700d59efd683";
+            var client_id=document.getElementById("client_id").textContent;
+            // console.log(client_id)
+            // var client_id = "6492b87042009a36db2b33e7";
             var end_date = "";
             var start_date = "";
             switch (dateOption) {
@@ -164,22 +186,29 @@
 
                     if (document.getElementById("phase").value == "___NONE___") {
                         const aggregatedStats = {};
-
                         const attendanceData = response.attendance;
 
                         attendanceData.forEach(entry => {
-                            const name = entry.phasename[0].name;
-                            const stats = entry.result[0].stats;
-
-                            if (aggregatedStats[name]) {
-                                for (const key in stats) {
-                                    if (stats.hasOwnProperty(key)) {
-                                        aggregatedStats[name][key] += stats[key];
+                            if (entry.phasename.length != 0) {
+                                const name = entry.phasename[0].name;
+                                const stats = entry.result[0].stats;
+                                if (aggregatedStats[name]) {
+                                    for (const key in stats) {
+                                        if (stats.hasOwnProperty(key)) {
+                                            aggregatedStats[name][key] += stats[key];
+                                        }
                                     }
+                                } else {
+                                    aggregatedStats[name] = { ...stats };
                                 }
-                            } else {
-                                aggregatedStats[name] = { ...stats };
+
                             }
+                            else {
+                                const name = "";
+                                const stats = 0;
+                            }
+
+
                         });
 
                         const aggregatedData = Object.keys(aggregatedStats).map(name => ({
@@ -200,7 +229,7 @@
                         Highcharts.chart('chart-container', {
                             chart: {
                                 type: 'pie',
-                              
+
                             },
                             title: {
                                 text: 'Present Percentage by Class'
