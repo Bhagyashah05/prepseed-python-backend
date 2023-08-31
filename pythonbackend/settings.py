@@ -52,7 +52,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-
 ]
 
 ROOT_URLCONF = 'pythonbackend.urls'
@@ -74,7 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'pythonbackend.wsgi.application'
-
+X_FRAME_OPTIONS = 'ALLOWALL'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases

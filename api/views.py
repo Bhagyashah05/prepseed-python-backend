@@ -134,7 +134,7 @@ class AttendanceStats(APIView):
             for res in result:
                 res['_id']=str(res['_id'])
                 response.append(res)
-            # print(response)
+            print(response)
             return Response({"attendance": response})
         else:
             return Response({"message": "No attendance data found for the specified criteria."})

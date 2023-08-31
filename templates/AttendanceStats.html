@@ -96,7 +96,8 @@
         </div>
     </div>
     <div id="chart-container"></div>
-    <div id="pagination"></div>
+    <br><br><br>
+    <div id="linechart-container"></div>
 
 
 
@@ -117,12 +118,12 @@
 
     <script>
         document.getElementById("attendanceForm").addEventListener("submit", function (event) {
-            
+
             document.getElementById("chart-container").innerHTML = "";
             event.preventDefault();
             var phase_id = document.getElementById("phase").value;
             var dateOption = document.getElementById("date").value;
-            var client_id=document.getElementById("client_id").textContent;
+            var client_id = document.getElementById("client_id").textContent;
             // console.log(client_id)
             // var client_id = "6492b87042009a36db2b33e7";
             var end_date = "";
@@ -298,6 +299,8 @@
                         // resultContainer.innerHTML = JSON.stringify(aggregatedResponse, null, 1);
                     }
 
+
+
                     else {
 
 
@@ -314,9 +317,7 @@
                             categories.push(date);
                             presentData.push(present);
                             absentData.push(absent);
-                            // console.log(categories); 
-                            // console.log(presentData);
-                            // console.log(absentData);
+
                         }
 
                         // Create the chart
@@ -358,6 +359,54 @@
                                 data: absentData
                             }]
                         });
+
+
+                        Highcharts.chart("linechart-container", {
+                            title: {
+                                text: "Attendance Trend"
+                            },
+                            xAxis: {
+                                categories: categories
+                            },
+                            yAxis: {
+                                title: {
+                                    text: "Attendance"
+                                }
+                            },
+                            series: [
+                                {
+                                    name: "Present Data",
+                                    data: presentData
+                                },
+                                {
+                                    name: "Absent Data",
+                                    data: absentData
+                                },
+                                {
+                                    type: "line",
+                                    name: "Trendline",
+                                    data: calculateTrendlineData(presentData),
+                                    marker: {
+                                        enabled: false
+                                    }
+                                }
+                            ]
+                        });
+
+                        function calculateTrendlineData(data) {
+                            const xValues = categories.map((_, index) => index);
+                            const yValues = data;
+
+                            const sumX = xValues.reduce((acc, val) => acc + val, 0);
+                            const sumY = yValues.reduce((acc, val) => acc + val, 0);
+                            const sumXY = xValues.reduce((acc, val, index) => acc + val * yValues[index], 0);
+                            const sumX2 = xValues.reduce((acc, val) => acc + val ** 2, 0);
+
+                            const slope = (xValues.length * sumXY - sumX * sumY) / (xValues.length * sumX2 - sumX ** 2);
+                            const intercept = (sumY - slope * sumX) / xValues.length;
+
+                            return xValues.map((x) => slope * x + intercept);
+                        }
 
 
                     }
