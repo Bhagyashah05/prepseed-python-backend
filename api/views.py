@@ -184,3 +184,71 @@ def clientSelect(request):
 
 
 
+def phaseSelect(request):
+    phase_pipeline = [
+        {
+            '$match': {
+                '_id': ObjectId('63dca9c42b23700d59efd683'),
+            }
+        },
+        {
+            '$lookup': {
+                'from': 'phases',
+                'localField': 'phases',
+                'foreignField': '_id',
+                'as': 'phaseinfo'
+            }
+        },
+        {
+            '$unwind': '$phaseinfo'
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'phaseid': '$phaseinfo._id',
+                'phasename': '$phaseinfo.name',
+            }
+        }
+    ]
+    phaseinfo = list(db.clients.aggregate(phase_pipeline))
+    return render(request, 'StudentAttendances.html', {'phaseinfo': phaseinfo})
+
+
+class Studentselect(APIView):
+    def get(self, request, *args, **kwargs):
+        phase_id=request.GET.get("phase_id")
+        # print(phase_id)
+        student_pipeline  = [
+        {
+            '$match': {
+                '_id': ObjectId(phase_id)
+            }
+        }, {
+            '$lookup': {
+                'from': 'users',
+                'localField': '_id',
+                'foreignField': 'phases',
+                'as': 'result'
+            }
+        }, {
+            '$unwind': {
+                'path': '$result'
+            }
+        }, {
+            '$match': {
+                'result.role': 'user'
+            }
+        }, {
+            '$project': {
+                '_id': 0,
+                'userid':'$result._id',
+                'username': '$result.name',
+                'role': '$result.role'
+            }
+        }
+    ]
+        studentinfo = list(db.phases.aggregate(student_pipeline))
+        # print(studentinfo)
+        for res in studentinfo:
+                res['userid']=str(res['userid'])
+        return Response({'studentinfo': studentinfo})

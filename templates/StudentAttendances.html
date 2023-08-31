@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
+    <script src="https://code.highcharts.com/modules/drilldown.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056B3;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div class="container">
+        <h2>Students Attendance Stats</h2>
+        <form id="attendanceForm" method="post">
+            {% csrf_token %}
+            <label for="phase">Phase Name:</label>
+            <select name="phase" id="phaseSelect" required>
+                <option value="" selected disabled>Select phase</option>
+                {% for data in phaseinfo %}
+                <option value="{{ data.phaseid }}">{{ data.phasename }}</option>
+                {% endfor %}
+            </select>
+            <label for="student" id="studentLabel" style="display: none;">Student Name:</label>
+            <select name="student" id="studentSelect" required style="display: none;">
+                <option value="" selected disabled>Select student</option>
+                {% for data in studentinfo %}
+                <option value="{{ data.userid }}">{{ data.username }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Get Attendance Stats</button>
+        </form>
+    </div>
+
+    <script>
+        $('#phaseSelect').on('change', function () {
+            var selectedPhase = $(this).val();
+            console.log(selectedPhase);
+            if (selectedPhase) {
+                $.ajax({
+                    url: '/get_students/',
+                    data: { phase_id: selectedPhase },
+                    success: function (data) {
+                        $('#studentSelect').empty(); // Clear existing options
+                        $('#studentLabel, #studentSelect').show();
+                        $('#studentSelect').append($('<option value="" selected disabled>Select student</option>'));
+                        // Iterate through the response and append options to student select
+                        for (var i = 0; i < data.studentinfo.length; i++) {
+                            $('#studentSelect').append($('<option>', {
+                                value: data.studentinfo[i].userid,
+                                text: data.studentinfo[i].username
+                            }));
+                        }
+                    }
+                });
+            } else {
+                $('#studentLabel, #studentSelect').hide();
+            }
+        });
+    </script>
+</body>
+
+</html>
