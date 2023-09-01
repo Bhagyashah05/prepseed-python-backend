@@ -75,6 +75,20 @@
                 <option value="{{ data.userid }}">{{ data.username }}</option>
                 {% endfor %}
             </select>
+            <label for="date">Date Range:</label>
+            <select name="date" id="date">
+                <option value="___NONE___">Show Data for All Dates</option>
+                <option value="custom">Custom</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="1w">1 Week</option>
+                <option value="2w">2 Weeks</option>
+                <option value="3w">3 Weeks</option>
+                <option value="this_month">This Month</option>
+                <option value="past_month">Past Month</option>
+            </select><br>
+            <input type="date" id="customDate" name="customDate" style="display: none;"><br>
+            <br>
             <button type="submit">Get Attendance Stats</button>
         </form>
     </div>
@@ -88,10 +102,9 @@
                     url: '/get_students/',
                     data: { phase_id: selectedPhase },
                     success: function (data) {
-                        $('#studentSelect').empty(); // Clear existing options
+                        $('#studentSelect').empty();
                         $('#studentLabel, #studentSelect').show();
                         $('#studentSelect').append($('<option value="" selected disabled>Select student</option>'));
-                        // Iterate through the response and append options to student select
                         for (var i = 0; i < data.studentinfo.length; i++) {
                             $('#studentSelect').append($('<option>', {
                                 value: data.studentinfo[i].userid,

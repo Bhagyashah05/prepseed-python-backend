@@ -185,10 +185,12 @@ def clientSelect(request):
 
 
 def phaseSelect(request):
+    client_id=request.GET.get("client_id")
+    print(client_id)
     phase_pipeline = [
         {
             '$match': {
-                '_id': ObjectId('63dca9c42b23700d59efd683'),
+                '_id': ObjectId(client_id),
             }
         },
         {
@@ -211,7 +213,7 @@ def phaseSelect(request):
         }
     ]
     phaseinfo = list(db.clients.aggregate(phase_pipeline))
-    return render(request, 'StudentAttendances.html', {'phaseinfo': phaseinfo})
+    return render(request, 'StudentAttendances.html', {'phaseinfo': phaseinfo })
 
 
 class Studentselect(APIView):
