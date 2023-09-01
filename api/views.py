@@ -57,6 +57,8 @@ class AttendanceStats(APIView):
         phase_id = request.data.get("phase_id")
         specified_start_date = request.data.get("start_date")
         specified_end_date = request.data.get("end_date")
+        user_id=request.data.get("user_id")
+        print(user_id)
         # print(specified_start_date)
         # print(specified_end_date)
         if phase_id == '' or phase_id == '___NONE___':
@@ -68,6 +70,8 @@ class AttendanceStats(APIView):
         if specified_end_date == '':
             specified_end_date = None
         
+        if user_id=='':
+            user_id=None
         client = MongoClient("mongodb://65.2.116.84:27017/") 
         db = client["production"]  
         
@@ -254,3 +258,83 @@ class Studentselect(APIView):
         for res in studentinfo:
                 res['userid']=str(res['userid'])
         return Response({'studentinfo': studentinfo})
+
+
+
+
+class StudentAttendanceAnalysis(APIView):
+    def post(self, request, *args, **kwargs):
+        phase_id=request.data.get("phase_id")
+        client_id=request.data.get("client_id")
+        user_id=ObjectId(request.data.get("user_id"))
+        print(client_id)
+        print(phase_id)
+        print(user_id)
+
+        pipeline = [
+    {
+        '$match': {
+            'client': ObjectId(client_id),
+            'users.user': user_id,
+            'phase':ObjectId(phase_id),
+        }
+    },
+    {
+        '$lookup': {
+            'from': 'users',
+            'localField': 'users.user',
+            'foreignField': '_id',
+            'as': 'user_info'
+        }
+    },
+    {
+        '$lookup': {
+            'from': 'phases',
+            'localField': 'phase',
+            'foreignField': '_id',
+            'as': 'phaseInfo'
+        }
+    },
+    {
+        '$unwind': '$user_info'
+    },
+    {
+        '$unwind': '$phaseInfo'
+    },
+    {
+        '$match': {
+            'user_info._id': user_id
+        }
+    },
+    {
+        '$addFields': {
+            'status_list': {
+                '$filter': {
+                    'input': '$users',
+                    'as': 'u',
+                    'cond': { '$eq': ['$$u.user', user_id] }
+                }
+            }
+        }
+    },
+    {
+        '$project': {
+            "_id": 0,
+            'user_id': '$user_info._id',
+            'username': '$user_info.name',
+            'phase_name': '$phaseInfo.name',
+            'date': {
+                '$dateToString': {
+                    'format': '%Y-%m-%d',
+                    'date': '$date'
+                }
+            },
+            'status':{ '$arrayElemAt': ['$status_list.status', 0] }
+        }
+    }
+]
+        result = list(db.attendances.aggregate(pipeline))
+        for res in result:
+            res["user_id"]=str(res["user_id"])
+        print(result)
+        return Response({'studentinfo': result})
