@@ -101,21 +101,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <script>
         document.getElementById("attendanceForm").addEventListener("submit", function (event) {
 
@@ -168,8 +153,8 @@
             console.log(start_date)
             console.log(end_date)
             $.ajax({
-                url: 'http://13.127.247.10/api/attendance-stats/',
-                // url: 'http://127.0.0.1:8000/api/attendance-stats/',
+                // url: 'http://13.127.247.10/api/attendance-stats/',
+                url: 'http://127.0.0.1:8000/api/attendance-stats/',
                 method: 'POST',
                 data: {
                     phase_id: phase_id,
@@ -185,7 +170,7 @@
 
                     if (document.getElementById("phase").value == "___NONE___") {
                         const aggregatedStats = {};
-                        const attendanceData = response.response; // Change 'attendance' to 'response'
+                        const attendanceData = response.attendance;
 
                         attendanceData.forEach(entry => {
                             if (entry.phasename.length != 0) {
@@ -200,11 +185,14 @@
                                 } else {
                                     aggregatedStats[name] = { ...stats };
                                 }
+
                             }
                             else {
                                 const name = "";
                                 const stats = 0;
                             }
+
+
                         });
 
                         const aggregatedData = Object.keys(aggregatedStats).map(name => ({
@@ -222,9 +210,10 @@
                         });
 
                         // Create the chart
-                        Highcharts.chart('barchartcontainer', {
+                        Highcharts.chart('chart-container', {
                             chart: {
                                 type: 'pie',
+
                             },
                             title: {
                                 text: 'Present Percentage by Class'
@@ -240,7 +229,7 @@
                                 pointFormat: '{series.name}: <b>{point.y:.2f}</b>'
                             },
                             legend: {
-                                enabled: true,
+                                enabled: true, // Set this to true to display the legend
                                 align: 'right',
                                 layout: 'vertical',
                                 verticalAlign: 'middle'
@@ -260,6 +249,7 @@
                                             y: entry.stats.A,
                                             count: entry.stats.A
                                         }
+
                                     ]
                                 }))
                             },
@@ -285,9 +275,10 @@
                                     }
                                 }
                             }
+
                         });
                     }
-                
+
 
 
 
@@ -295,111 +286,107 @@
 
 
 
-                    var categories = [];
-                    var presentData = [];
-                    var absentData = [];
+                        var categories = [];
+                        var presentData = [];
+                        var absentData = [];
 
-                    for(var i = 0; i<response.attendance.length; i++) {
-                var date = response.attendance[i].date.split('T')[0];
-                var present = response.attendance[i].result[0].stats.P;
-                var absent = response.attendance[i].result[0].stats.A;
+                        for (var i = 0; i < response.attendance.length; i++) {
+                            var date = response.attendance[i].date.split('T')[0];
+                            var present = response.attendance[i].result[0].stats.P;
+                            var absent = response.attendance[i].result[0].stats.A;
 
-                categories.push(date);
-                presentData.push(present);
-                absentData.push(absent);
+                            categories.push(date);
+                            presentData.push(present);
+                            absentData.push(absent);
 
-            }
+                        }
 
-            // Create the chart
-            Highcharts.chart('chart-container', {
-                chart: {
-                    type: 'column',
+                        // Create the chart
+                        Highcharts.chart('chart-container', {
+                            chart: {
+                                type: 'column',
 
-                },
-                title: {
-                    text: 'Attendance Chart'
-                },
-                xAxis: {
-                    categories: categories,
-                    min: 0,
-                    max: categories.length >= 10 ? 10 : categories.length - 1,
-                    scrollbar: {
-                        enabled: true
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: 'Number of Students'
-                    }
-                },
+                            },
+                            title: {
+                                text: 'Attendance Chart'
+                            },
+                            xAxis: {
+                                categories: categories,
+                                min: 0,
+                                max: categories.length >= 10 ? 10 : categories.length - 1,
+                                scrollbar: {
+                                    enabled: true
+                                }
+                            },
+                            yAxis: {
+                                title: {
+                                    text: 'Number of Students'
+                                }
+                            },
 
-                legend: {
-                    reversed: true
-                },
-                plotOptions: {
-                    bar: {
-                        stacking: 'normal'
-                    }
-                },
-                series: [{
-                    name: 'Present',
-                    data: presentData
-                }, {
-                    name: 'Absent',
-                    data: absentData
-                }]
-            });
+                            legend: {
+                                reversed: true
+                            },
+                            plotOptions: {
+                                bar: {
+                                    stacking: 'normal'
+                                }
+                            },
+                            series: [{
+                                name: 'Present',
+                                data: presentData
+                            }, {
+                                name: 'Absent',
+                                data: absentData
+                            }]
+                        });
+                        Highcharts.chart("linechart-container", {
+                            title: {
+                                text: "Attendance Trend"
+                            },
+                            xAxis: {
+                                categories: categories
+                            },
+                            yAxis: {
+                                title: {
+                                    text: "Attendance"
+                                }
+                            },
+                            series: [
+                                {
+                                    name: "Present Data",
+                                    data: presentData
+                                },
+                                {
+                                    name: "Absent Data",
+                                    data: absentData
+                                },
+                                {
+                                    type: "line",
+                                    name: "Trendline",
+                                    data: calculateTrendlineData(presentData),
+                                    marker: {
+                                        enabled: false
+                                    }
+                                }
+                            ]
+                        });
 
+                        function calculateTrendlineData(data) {
+                            const xValues = categories.map((_, index) => index);
+                            const yValues = data;
 
-            Highcharts.chart("linechart-container", {
-                title: {
-                    text: "Attendance Trend"
-                },
-                xAxis: {
-                    categories: categories
-                },
-                yAxis: {
-                    title: {
-                        text: "Attendance"
-                    }
-                },
-                series: [
-                    {
-                        name: "Present Data",
-                        data: presentData
-                    },
-                    {
-                        name: "Absent Data",
-                        data: absentData
-                    },
-                    {
-                        type: "line",
-                        name: "Trendline",
-                        data: calculateTrendlineData(presentData),
-                        marker: {
-                            enabled: false
+                            const sumX = xValues.reduce((acc, val) => acc + val, 0);
+                            const sumY = yValues.reduce((acc, val) => acc + val, 0);
+                            const sumXY = xValues.reduce((acc, val, index) => acc + val * yValues[index], 0);
+                            const sumX2 = xValues.reduce((acc, val) => acc + val ** 2, 0);
+
+                            const slope = (xValues.length * sumXY - sumX * sumY) / (xValues.length * sumX2 - sumX ** 2);
+                            const intercept = (sumY - slope * sumX) / xValues.length;
+
+                            return xValues.map((x) => slope * x + intercept);
                         }
                     }
-                ]
-            });
-
-            function calculateTrendlineData(data) {
-                const xValues = categories.map((_, index) => index);
-                const yValues = data;
-
-                const sumX = xValues.reduce((acc, val) => acc + val, 0);
-                const sumY = yValues.reduce((acc, val) => acc + val, 0);
-                const sumXY = xValues.reduce((acc, val, index) => acc + val * yValues[index], 0);
-                const sumX2 = xValues.reduce((acc, val) => acc + val ** 2, 0);
-
-                const slope = (xValues.length * sumXY - sumX * sumY) / (xValues.length * sumX2 - sumX ** 2);
-                const intercept = (sumY - slope * sumX) / xValues.length;
-
-                return xValues.map((x) => slope * x + intercept);
-            }
-
-
-        }
                 }
             });
         });

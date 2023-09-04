@@ -39,8 +39,6 @@ class AttendanceStatusView(APIView):
         }
     }
 ]
-
-
         result = list(db.attendances.aggregate(pipeline))
         print(result)
         return Response(result)
@@ -58,6 +56,7 @@ class AttendanceStats(APIView):
         specified_start_date = request.data.get("start_date")
         specified_end_date = request.data.get("end_date")
         user_id=request.data.get("user_id")
+        subgroup_id = request.data.get("subgroup_id") 
         print(user_id)
         # print(specified_start_date)
         # print(specified_end_date)
@@ -72,6 +71,9 @@ class AttendanceStats(APIView):
         
         if user_id=='':
             user_id=None
+            
+        if subgroup_id == '':
+            subgroup_id = None
         client = MongoClient("mongodb://65.2.116.84:27017/") 
         db = client["production"]  
         
@@ -96,55 +98,124 @@ class AttendanceStats(APIView):
                 date_match["$lte"] = specified_end_date
             print(date_match)  
             pipeline.append({ "$match": { "dateStr": date_match } })
-        
-        pipeline.extend([
-            {
-                '$lookup': {
-                    'from': 'attendancestats', 
-                    'localField': 'stats', 
-                    'foreignField': '_id', 
-                    'as': 'result'
+        if subgroup_id is not None:
+            pipeline.append({
+                "$match": {
+                    "subgroup": ObjectId(subgroup_id),
                 }
-            },
-             {
-                '$lookup': {
-                    'from': 'phases', 
-                    'localField': 'phase', 
-                    'foreignField': '_id', 
-                    'as': 'phasename'
-                }
-            },
-                {
-            '$addFields': {
-                'phaseAsString': { '$toString': '$phase' }
-            }
-    },
-            {
-                '$project': {
-                    'result.stats': 1,
-                    'date':1,
-                    'phaseAsString':1,
-                    'phasename.name':1,
+            })
 
+        if user_id is not None:
+            pipeline.append({ "$match": { "users.user": ObjectId(user_id) } })
+            pipeline.extend([{
+        '$lookup': {
+            'from': 'users',
+            'localField': 'users.user',
+            'foreignField': '_id',
+            'as': 'user_info'
+        }
+    },
+    {
+        '$lookup': {
+            'from': 'phases',
+            'localField': 'phase',
+            'foreignField': '_id',
+            'as': 'phaseInfo'
+        }
+    },
+    {
+        '$unwind': '$user_info'
+    },
+    {
+        '$unwind': '$phaseInfo'
+    },
+    {
+        '$match': {
+            'user_info._id': ObjectId(user_id)
+        }
+    },
+    {
+        '$addFields': {
+            'status_list': {
+                '$filter': {
+                    'input': '$users',
+                    'as': 'u',
+                    'cond': { '$eq': ['$$u.user', ObjectId(user_id)] }
                 }
             }
-        ])
+        }
+    },
+    {
+        '$project': {
+            "_id": 0,
+            'user_id': '$user_info._id',
+            'username': '$user_info.name',
+            'phase_name': '$phaseInfo.name',
+            'date': {
+                '$dateToString': {
+                    'format': '%Y-%m-%d',
+                    'date': '$date'
+                }
+            },
+            'status':{ '$arrayElemAt': ['$status_list.status', 0] }
+        }
+    }])
+        else:
+            pipeline.extend([
+                {
+                    '$lookup': {
+                        'from': 'attendancestats', 
+                        'localField': 'stats', 
+                        'foreignField': '_id', 
+                        'as': 'result'
+                    }
+                },
+                {
+                    '$lookup': {
+                        'from': 'phases', 
+                        'localField': 'phase', 
+                        'foreignField': '_id', 
+                        'as': 'phasename'
+                    }
+                },
+                    {
+                '$addFields': {
+                    'phaseAsString': { '$toString': '$phase' }
+                }
+        },
+                {
+                    '$project': {
+                        'result.stats': 1,
+                        'date':1,
+                        'phaseAsString':1,
+                        'phasename.name':1,
+
+                    }
+                }
+            ])
         
         result = list(db.attendances.aggregate(pipeline))
-        # print(result)
-        if result:
-            response=[]
-            print("enter")
-            for res in result:
-                res['_id']=str(res['_id'])
-                response.append(res)
-            print(response)
-            return Response({"attendance": response})
+        print(result)
+        if user_id is None:
+            if result:
+                response=[]
+                print("enter")
+                for res in result:
+                    res['_id']=str(res['_id'])
+                    response.append(res)
+                print(response)
+                return Response({"attendance": response})
+            else:
+                return Response({"message": "No attendance data found for the specified criteria."})
+
         else:
-            return Response({"message": "No attendance data found for the specified criteria."})
-
-
-
+            if result:
+                for res in result:
+                    res["user_id"]=str(res["user_id"])
+                    print(result)
+                return Response({"attendance": result})
+            else:
+                return Response({"message": "No attendance data found for the specified criteria."})
 
 def clientSelect(request):
     # client_id=request.GET.get('client_id')
