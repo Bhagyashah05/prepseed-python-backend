@@ -61,8 +61,9 @@
         <h2>Students Attendance Stats</h2>
         <form id="attendanceForm" method="post">
             {% csrf_token %}
+            <label for="client" id="client_id" style="display: none;">{{client_id}}</label>
             <label for="phase">Phase Name:</label>
-            <select name="phase" id="phaseSelect" required>
+            <select name="phase" id="phase_id" required>
                 <option value="" selected disabled>Select phase</option>
                 {% for data in phaseinfo %}
                 <option value="{{ data.phaseid }}">{{ data.phasename }}</option>
@@ -89,18 +90,22 @@
             </select><br>
             <input type="date" id="customDate" name="customDate" style="display: none;"><br>
             <br>
-            <button type="submit">Get Attendance Stats</button>
+            <button type="submit" id="getAttendanceButton">Get Attendance Stats</button>
         </form>
     </div>
+    <div id="barChartContainer">
+        <!-- The chart will be displayed here -->
+    </div>
+    <div id="lineChartContainer"></div>
 
     <script>
-        $('#phaseSelect').on('change', function () {
-            var selectedPhase = $(this).val();
-            console.log(selectedPhase);
-            if (selectedPhase) {
+        $('#phase_id').on('change', function () {
+            var phase_id = $(this).val();
+            if (phase_id) {
                 $.ajax({
                     url: '/get_students/',
-                    data: { phase_id: selectedPhase },
+                    method: 'POST',
+                    data: { phase_id: phase_id },
                     success: function (data) {
                         $('#studentSelect').empty();
                         $('#studentLabel, #studentSelect').show();
@@ -117,6 +122,118 @@
                 $('#studentLabel, #studentSelect').hide();
             }
         });
+        document.getElementById("attendanceForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            var phase_id = document.getElementById("phase_id").value;
+            var dateOption = document.getElementById("date").value;
+            var user_id = document.getElementById("studentSelect").value;
+            var client_id = document.getElementById("client_id").textContent;
+            var end_date = "";
+            var start_date = "";
+            console.log(client_id);
+            console.log(phase_id);
+
+
+            switch (dateOption) {
+                case "today":
+                    start_date = new Date().toISOString().split('T')[0];
+                    end_date = new Date().toISOString().split('T')[0];
+                    break;
+                case "yesterday":
+                    var yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    start_date = yesterday.toISOString().split('T')[0];
+                    end_date = yesterday.toISOString().split('T')[0];
+                    break;
+                case "1w":
+                case "2w":
+                case "3w":
+                    var weeksAgo = parseInt(dateOption);
+                    var targetDate = new Date();
+                    targetDate.setDate(targetDate.getDate() - (weeksAgo * 7));
+                    end_date = new Date().toISOString().split('T')[0];
+                    start_date = targetDate.toISOString().split('T')[0];
+                    break;
+                case "this_month":
+                    var today = new Date();
+                    var firstDay = new Date(today.getFullYear(), today.getMonth(), 2);
+                    end_date = new Date().toISOString().split('T')[0];
+                    start_date = firstDay.toISOString().split('T')[0];
+                    break;
+                case "past_month":
+                    var today = new Date();
+                    var lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 2);
+                    end_date = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                    start_date = lastMonth.toISOString().split('T')[0];
+                    break;
+                case "custom":
+                    start_date = document.getElementById("customDate").value;
+                    end_date = document.getElementById("customDate").value;
+                    break;
+            }
+            console.log(end_date);
+            console.log(start_date);
+            var requestData = {
+                phase_id: phase_id,
+                start_date: start_date,
+                end_date: end_date,
+                client_id: client_id,
+                user_id: user_id,
+            };
+
+            $.ajax({
+                url: 'http://127.0.0.1:8000/studentAttendanceAnalysis/',
+                method: 'POST',
+                data: requestData,
+                success: function (response) {
+                    const data = response.response; // Replace 'response.response' with 'response' if the data is directly in 'response'
+
+                    const dates = data.map(entry => entry.date);
+                    const status = data.map(entry => entry.status);
+                    const username = data.map(entry => entry.username);
+                    Highcharts.chart('barChartContainer', {
+                        chart: {
+                            type: 'column'
+                        },
+                        title: {
+                            text: 'Attendance Status (Bar Chart)'
+                        },
+                        xAxis: {
+                            categories: dates,
+                            title: {
+                                text: 'Date'
+                            },
+                            min: 0,
+                            max: dates.length >= 10 ? 10 : dates.length - 1,
+                            scrollbar: {
+                                enabled: true
+                            }
+                        },
+                        yAxis: {
+                            title: {
+                                text: 'Attendance Status'
+                            },
+                            categories: ['absent', 'present'], // Define categories for the y-axis
+                        },
+                        series: [{
+                            name: 'Status',
+                            data: status.map(status => status === 'A' ? 0 : 1), // Use 0 for 'P' and 1 for 'A'
+                            dataLabels: {
+                                enabled: true,
+                                format: '{y}', // Display '0' for 'P' and '1' for 'A' on the bars
+                                color: 'black', // Set the data label color
+                            }
+                        }]
+                    });
+
+
+
+
+                }
+
+            });
+        });
+
     </script>
 </body>
 

@@ -190,7 +190,7 @@ def clientSelect(request):
 
 def phaseSelect(request):
     client_id=request.GET.get("client_id")
-    print(client_id)
+    # print(client_id)
     phase_pipeline = [
         {
             '$match': {
@@ -217,12 +217,12 @@ def phaseSelect(request):
         }
     ]
     phaseinfo = list(db.clients.aggregate(phase_pipeline))
-    return render(request, 'StudentAttendances.html', {'phaseinfo': phaseinfo })
+    return render(request, 'StudentAttendances.html', {'phaseinfo': phaseinfo,'client_id':client_id })
 
 
 class Studentselect(APIView):
-    def get(self, request, *args, **kwargs):
-        phase_id=request.GET.get("phase_id")
+    def post(self, request, *args, **kwargs):
+        phase_id=request.data.get("phase_id")
         # print(phase_id)
         student_pipeline  = [
         {
@@ -264,22 +264,40 @@ class Studentselect(APIView):
 
 class StudentAttendanceAnalysis(APIView):
     def post(self, request, *args, **kwargs):
+        specified_start_date = None
+        specified_end_date = None
         phase_id=request.data.get("phase_id")
         client_id=request.data.get("client_id")
         user_id=ObjectId(request.data.get("user_id"))
-        print(client_id)
+        specified_start_date = request.data.get("start_date")
+        specified_end_date = request.data.get("end_date")
+        
         print(phase_id)
         print(user_id)
-
+        print(specified_end_date)
+        print(specified_start_date)
+        print(client_id)
         pipeline = [
-    {
-        '$match': {
+        {
+            '$match': {
             'client': ObjectId(client_id),
             'users.user': user_id,
             'phase':ObjectId(phase_id),
-        }
-    },
-    {
+        },
+
+    }]
+        if specified_start_date is not None:
+            pipeline.append({ "$addFields": { "dateStr": { "$dateToString": { "format": "%Y-%m-%d", "date": "$date" } } } })
+            date_match = {
+                "$gte": specified_start_date
+            }
+            
+            if specified_end_date is not None:
+                date_match["$lte"] = specified_end_date
+            print(date_match)  
+            pipeline.append({ "$match": { "dateStr": date_match } })
+
+            pipeline.extend([{
         '$lookup': {
             'from': 'users',
             'localField': 'users.user',
@@ -331,10 +349,11 @@ class StudentAttendanceAnalysis(APIView):
             },
             'status':{ '$arrayElemAt': ['$status_list.status', 0] }
         }
-    }
-]
-        result = list(db.attendances.aggregate(pipeline))
-        for res in result:
+    }])
+
+        
+        response = list(db.attendances.aggregate(pipeline))
+        for res in response:
             res["user_id"]=str(res["user_id"])
-        print(result)
-        return Response({'studentinfo': result})
+        print(response)
+        return Response({'response': response})
