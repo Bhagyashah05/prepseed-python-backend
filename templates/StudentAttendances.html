@@ -329,7 +329,14 @@
 
             });
         });
-
+        document.getElementById("date").addEventListener("change", function () {
+            var customDateInput = document.getElementById("customDate");
+            if (this.value === "custom") {
+                customDateInput.style.display = "block";
+            } else {
+                customDateInput.style.display = "none";
+            }
+        });
     </script>
 </body>
 
