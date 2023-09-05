@@ -14,6 +14,11 @@
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -53,10 +58,36 @@
         button:hover {
             background-color: #0056B3;
         }
+
+        .navbar {
+            background-color: #333;
+            padding: 10px;
+            /* Adjust the padding as needed */
+            text-align: left;
+            /* Align the button to the right */
+        }
+
+        /* Style for the "Student Wise" button */
+        #studentWiseButton {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            /* Adjust the padding as needed */
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Hover effect for the button */
+        #studentWiseButton:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 
 <body id="body">
+    <div class="navbar">
+        <button id="studentWiseButton">back</button>
+    </div>
     <div class="container">
         <h2>Students Attendance Stats</h2>
         <form id="attendanceForm" method="post">
@@ -97,8 +128,45 @@
         <!-- The chart will be displayed here -->
     </div>
     <div id="lineChartContainer"></div>
+    <div class="modal" id="datesModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Attendance Dates</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul id="datesList"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
+        // Get the "Student Wise" button element
+        var studentWiseButton = document.getElementById('studentWiseButton');
+
+        // Add a click event listener to the button
+        studentWiseButton.addEventListener('click', function () {
+            // Call your JavaScript function here
+            redirectToStudentWise();
+        });
+
+        // JavaScript function to handle the redirection
+        function redirectToStudentWise() {
+            // Get the client_id from the hidden label
+            var client_id = document.getElementById('client_id').textContent;
+
+            // Construct the URL with the client_id parameter
+            // var url = 'http://127.0.0.1:8000/attendance/?client_id=' + client_id;
+            var url = 'http://13.127.247.10/attendance/?client_id=' + client_id;
+            // Redirect to the URL
+            window.location.href = url;
+        }
+
         $('#phase_id').on('change', function () {
             var phase_id = $(this).val();
             if (phase_id) {
@@ -182,49 +250,77 @@
             };
 
             $.ajax({
-                url: 'http://127.0.0.1:8000/api/attendance-stats/',
+                // url: 'http://127.0.0.1:8000/api/attendance-stats/',
+                url: 'http://13.127.247.10/api/attendance-stats/',
                 method: 'POST',
                 data: requestData,
                 success: function (response) {
                     const data = response.attendance; // Replace 'response.response' with 'response' if the data is directly in 'response'
-                    // console.log(response)
+
                     const dates = data.map(entry => entry.date);
                     const status = data.map(entry => entry.status);
                     const username = data.map(entry => entry.username);
                     Highcharts.chart('barChartContainer', {
                         chart: {
-                            type: 'column'
-                        },
-                        title: {
-                            text: 'Attendance Status (Bar Chart)'
-                        },
-                        xAxis: {
-                            categories: dates,
-                            title: {
-                                text: 'Date'
-                            },
-                            min: 0,
-                            max: dates.length >= 10 ? 10 : dates.length - 1,
-                            scrollbar: {
-                                enabled: true
+                            type: 'pie', // Change the chart type to 'pie' for a donut chart
+                            options3d: {
+                                enabled: true,
+                                alpha: 45
                             }
                         },
-                        yAxis: {
-                            title: {
-                                text: 'Attendance Status'
-                            },
-                            categories: ['absent', 'present'], // Define categories for the y-axis
+                        title: {
+                            text: 'Attendance Status (Donut Chart)'
+                        },
+                        plotOptions: {
+                            pie: {
+                                innerSize: '50%', // Set the inner size to create a donut chart
+                                dataLabels: {
+                                    enabled: true,
+                                    format: '<b>{point.name}</b>: {point.percentage:.1f}%',
+                                    style: {
+                                        color: 'black'
+                                    }
+                                },
+                                point: {
+                                    events: {
+                                        click: function () {
+                                            var statusClicked = this.name; // 'Absent' or 'Present'
+                                            var datesForStatus = [];
+
+                                            // Loop through dates and collect dates for the selected status
+                                            for (var i = 0; i < dates.length; i++) {
+                                                if (status[i] === statusClicked.charAt(0)) {
+                                                    datesForStatus.push(dates[i]);
+                                                }
+                                            }
+
+                                            // Populate the modal dialog with the dates
+                                            $('#datesList').empty(); // Clear existing list
+                                            $.each(datesForStatus, function (index, date) {
+                                                $('#datesList').append('<li>' + date + '</li>');
+                                            });
+
+                                            // Show the modal dialog
+                                            $('#datesModal').modal('show');
+                                        }
+                                    }
+                                }
+                            }
                         },
                         series: [{
                             name: 'Status',
-                            data: status.map(status => status === 'A' ? 0 : 1), // Use 0 for 'P' and 1 for 'A'
-                            dataLabels: {
-                                enabled: true,
-                                format: '{y}', // Display '0' for 'P' and '1' for 'A' on the bars
-                                color: 'black', // Set the data label color
-                            }
+                            data: [{
+                                name: 'Absent',
+                                y: status.filter(status => status === 'A').length, // Count 'A' (absent) entries
+                                color: 'red' // Set the color for absent
+                            }, {
+                                name: 'Present',
+                                y: status.filter(status => status === 'P').length, // Count 'P' (present) entries
+                                color: 'green' // Set the color for present
+                            }]
                         }]
                     });
+
 
 
 

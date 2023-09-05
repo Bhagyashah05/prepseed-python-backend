@@ -53,11 +53,37 @@
         button:hover {
             background-color: #0056B3;
         }
+
+        .navbar {
+            background-color: #333;
+            padding: 10px;
+            /* Adjust the padding as needed */
+            text-align: right;
+            /* Align the button to the right */
+        }
+
+        /* Style for the "Student Wise" button */
+        #studentWiseButton {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            /* Adjust the padding as needed */
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Hover effect for the button */
+        #studentWiseButton:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 
 <body>
     {% csrf_token %}
+    <div class="navbar">
+        <button id="studentWiseButton">Student Wise</button>
+    </div>
     <div class="container">
         <h2>Class Attendance Stats</h2>
         <form id="attendanceForm">
@@ -90,7 +116,8 @@
             <br>
             <br>
             <button type="submit">Get Attendance Stats</button>
-        </form>
+        </form><br>
+
         <div id="resultContainer">
             <!-- Display the fetched data here -->
         </div>
@@ -102,6 +129,25 @@
 
 
     <script>
+        var studentWiseButton = document.getElementById('studentWiseButton');
+
+        // Add a click event listener to the button
+        studentWiseButton.addEventListener('click', function () {
+            // Call your JavaScript function here
+            redirectToStudentWise();
+        });
+
+        // JavaScript function to handle the redirection
+        function redirectToStudentWise() {
+            // Get the client_id from the hidden label
+            var client_id = document.getElementById('client_id').textContent;
+
+            // Construct the URL with the client_id parameter
+            // var url = 'http://127.0.0.1:8000/studAtt/?client_id=' + client_id;
+            var url = 'http://13.127.247.10/studAtt/?client_id=' + client_id;
+            // Redirect to the URL
+            window.location.href = url;
+        }
         document.getElementById("attendanceForm").addEventListener("submit", function (event) {
 
             document.getElementById("chart-container").innerHTML = "";
