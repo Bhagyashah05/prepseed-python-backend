@@ -3,6 +3,7 @@
 
 <head>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -72,7 +73,7 @@
 
     <div class="container">
         <h2>active Status</h2>
-        <form id="attendanceForm" method="post">
+        <form id="chatAnalysis" method="post">
             {% csrf_token %}
             <label for="date">Date Range:</label>
             <select name="date" id="date">
@@ -92,7 +93,9 @@
         </form>
     </div>
     <script>
-        document.getElementById("attendanceForm").addEventListener("submit", function (event) {
+        document.getElementById("chatAnalysis").addEventListener("submit", function (event) {
+            event.preventDefault();
+
             var dateOption = document.getElementById("date").value;
             var start_date, end_date;
             switch (dateOption) {
@@ -134,27 +137,28 @@
             }
             console.log(end_date);
             console.log(start_date);
-            var requestData = {
-                startDate: start_date,
-                endDate: end_date,
-            };
+            // var requestData = {
+            //     startDate: start_date,
+            //     endDate: end_date,
+            // };
+            console.log("hii")
             $.ajax({
                 url: 'http://127.0.0.1:8000/api/chatAnalysis/',
                 // url: 'http://13.127.247.10/api/chatAnalysis/',
+                cache: 'false',
                 method: 'POST',
-                data: requestData,
-                success: function (Response) {
-                    console.log("hello")
+                data: {
+                    startDate: start_date,
+                    endDate: end_date,
                 },
-                error: function (xhr, status, error) {
-                    console.error("hello2");
+                success: function (response) {
+                    console.log(response)
                 },
-                complete: function (xhr, status) {
-                    console.log("hrllo")
-                }
 
             });
+            console.log("done")
         });
+
     </script>
 </body>
 
