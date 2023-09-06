@@ -12,6 +12,8 @@ from django.shortcuts import render
 client = MongoClient("mongodb://65.2.116.84:27017/") 
 db = client["production"] 
 
+def chatHtml(request):
+    return render(request,"chatanalysis.html")
 
 class chatAnalysis(APIView):
     def post(self, request, *args, **kwargs):
