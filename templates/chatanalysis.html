@@ -148,6 +148,19 @@
             }
             console.log(end_date);
             console.log(start_date);
+            var requestData = {
+                start_date: start_date,
+                end_date: end_date,
+            };
+            $.ajax({
+                url: 'http://127.0.0.1:8000/api/chatAnalysis/',
+                // url: 'http://13.127.247.10/api/chatAnalysis/',
+                method: 'POST',
+                data: requestData,
+                success: function (response) {
+
+                }
+            });
         });
     </script>
 </body>
