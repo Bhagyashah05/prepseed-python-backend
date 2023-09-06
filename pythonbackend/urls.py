@@ -1,8 +1,8 @@
 from django.urls import path
 from api.views import AttendanceStatusView
 from api.views import AttendanceStats
-from api.views import clientSelect,phaseSelect,Studentselect
-from api.views import StudentAttendanceAnalysis
+from api.views import clientSelect,phaseSelect
+from api.views import StudentAttendanceAnalysis,Studentselect
 
 urlpatterns = [
     path('api/attendance-status/', AttendanceStatusView.as_view(), name='attendance-status'),

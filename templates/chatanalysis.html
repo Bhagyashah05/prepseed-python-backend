@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
+    <script src="https://code.highcharts.com/modules/drilldown.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056B3;
+        }
+
+        .navbar {
+            background-color: #333;
+            padding: 10px;
+            /* Adjust the padding as needed */
+            text-align: left;
+            /* Align the button to the right */
+        }
+
+        /* Style for the "Student Wise" button */
+        #studentWiseButton {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            /* Adjust the padding as needed */
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Hover effect for the button */
+        #studentWiseButton:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div class="container">
+        <h2>active Status</h2>
+        <form id="attendanceForm" method="post">
+
+            <label for="date">Date Range:</label>
+            <select name="date" id="date">
+                <option value="___NONE___">Show Data for All Dates</option>
+                <option value="custom">Custom</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="1w">1 Week</option>
+                <option value="2w">2 Weeks</option>
+                <option value="3w">3 Weeks</option>
+                <option value="this_month">This Month</option>
+                <option value="past_month">Past Month</option>
+            </select><br>
+            <input type="date" id="customDate" name="customDate" style="display: none;"><br>
+            <br>
+            <button type="submit" id="getAttendanceButton">Get Status</button>
+        </form>
+    </div>  
+</body>
+
+</html>
