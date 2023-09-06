@@ -105,7 +105,51 @@
             <br>
             <button type="submit" id="getAttendanceButton">Get Status</button>
         </form>
-    </div>  
+    </div>
+    <script>
+        document.getElementById("attendanceForm").addEventListener("submit", function (event) {
+            var dateOption = document.getElementById("date").value;
+            switch (dateOption) {
+                case "today":
+                    start_date = new Date().toISOString().split('T')[0];
+                    end_date = new Date().toISOString().split('T')[0];
+                    break;
+                case "yesterday":
+                    var yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    start_date = yesterday.toISOString().split('T')[0];
+                    end_date = yesterday.toISOString().split('T')[0];
+                    break;
+                case "1w":
+                case "2w":
+                case "3w":
+                    var weeksAgo = parseInt(dateOption);
+                    var targetDate = new Date();
+                    targetDate.setDate(targetDate.getDate() - (weeksAgo * 7));
+                    end_date = new Date().toISOString().split('T')[0];
+                    start_date = targetDate.toISOString().split('T')[0];
+                    break;
+                case "this_month":
+                    var today = new Date();
+                    var firstDay = new Date(today.getFullYear(), today.getMonth(), 2);
+                    end_date = new Date().toISOString().split('T')[0];
+                    start_date = firstDay.toISOString().split('T')[0];
+                    break;
+                case "past_month":
+                    var today = new Date();
+                    var lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 2);
+                    end_date = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                    start_date = lastMonth.toISOString().split('T')[0];
+                    break;
+                case "custom":
+                    start_date = document.getElementById("customDate").value;
+                    end_date = document.getElementById("customDate").value;
+                    break;
+            }
+            console.log(end_date);
+            console.log(start_date);
+        });
+    </script>
 </body>
 
 </html>
