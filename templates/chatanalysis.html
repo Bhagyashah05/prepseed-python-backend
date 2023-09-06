@@ -2,23 +2,7 @@
 <html>
 
 <head>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
-    <script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
-    <script src="https://code.highcharts.com/stock/highstock.js"></script>
-    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/data.js"></script>
-    <script src="https://code.highcharts.com/modules/drilldown.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -85,11 +69,11 @@
 </head>
 
 <body id="body">
-    {% csrf_token %}
+
     <div class="container">
         <h2>active Status</h2>
         <form id="attendanceForm" method="post">
-
+            {% csrf_token %}
             <label for="date">Date Range:</label>
             <select name="date" id="date">
                 <option value="___NONE___">Show Data for All Dates</option>
@@ -110,6 +94,7 @@
     <script>
         document.getElementById("attendanceForm").addEventListener("submit", function (event) {
             var dateOption = document.getElementById("date").value;
+            var start_date, end_date;
             switch (dateOption) {
                 case "today":
                     start_date = new Date().toISOString().split('T')[0];
@@ -158,9 +143,16 @@
                 // url: 'http://13.127.247.10/api/chatAnalysis/',
                 method: 'POST',
                 data: requestData,
-                success: function (response) {
-                    console.log(response.response)
+                success: function (Response) {
+                    console.log("hello")
+                },
+                error: function (xhr, status, error) {
+                    console.error("hello2");
+                },
+                complete: function (xhr, status) {
+                    console.log("hrllo")
                 }
+
             });
         });
     </script>

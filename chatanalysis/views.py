@@ -34,9 +34,9 @@ class chatAnalysis(APIView):
             pipeline.append({ "$match": { "dateStr": date_match } })
 
         result = list(db.conversations.aggregate(pipeline))
-        print(result)
         Activegroups={}
         for res in result:
             Activegroups[str(res["_id"])]=res["name"]
-        return Response(Activegroups)
+        print(Activegroups)
+        return Response({"Activegroups":Activegroups})
 
