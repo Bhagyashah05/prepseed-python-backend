@@ -85,6 +85,7 @@
 </head>
 
 <body id="body">
+    {% csrf_token %}
     <div class="container">
         <h2>active Status</h2>
         <form id="attendanceForm" method="post">
@@ -158,7 +159,7 @@
                 method: 'POST',
                 data: requestData,
                 success: function (response) {
-
+                    console.log(response.response)
                 }
             });
         });
