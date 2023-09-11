@@ -3,6 +3,9 @@
 
 <head>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
 
     <style>
         body {
@@ -92,6 +95,16 @@
             <button type="submit" id="getAttendanceButton">Get Status</button>
         </form>
     </div>
+    <table id="myDataTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data rows will be inserted here -->
+        </tbody>
+    </table>
     <script>
         document.getElementById("chatAnalysis").addEventListener("submit", function (event) {
             event.preventDefault();
@@ -143,8 +156,8 @@
             // };
             console.log("hii")
             $.ajax({
-                // url: 'http://127.0.0.1:8000/api/chatAnalysis/',
-                url: 'http://13.127.247.10/api/chatAnalysis/',
+                url: 'http://127.0.0.1:8000/api/chatAnalysis/',
+                // url: 'http://13.127.247.10/api/chatAnalysis/',
                 cache: 'false',
                 method: 'POST',
                 data: {
@@ -152,7 +165,21 @@
                     endDate: end_date,
                 },
                 success: function (response) {
-                    console.log(response)
+                    
+                    
+
+                    // Initialize DataTable
+                    $(document).ready(function () {
+                        $('#myDataTable').DataTable({
+                            data: Object.values(response.Activegroups).map(value => ({
+                                Name: value,
+                            })),
+                            columns: [
+                                { data: 'Name' },
+                            ],
+                        });
+                    });
+
                 },
 
             });
