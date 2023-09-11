@@ -108,7 +108,9 @@
     <script>
         document.getElementById("chatAnalysis").addEventListener("submit", function (event) {
             event.preventDefault();
-
+            if ($.fn.DataTable.isDataTable('#myDataTable')) {
+                $('#myDataTable').DataTable().destroy();
+            }
             var dateOption = document.getElementById("date").value;
             var start_date, end_date;
             switch (dateOption) {
@@ -165,21 +167,16 @@
                     endDate: end_date,
                 },
                 success: function (response) {
-                    
-                    
-
                     // Initialize DataTable
-                    $(document).ready(function () {
-                        $('#myDataTable').DataTable({
-                            data: Object.values(response.Activegroups).map(value => ({
-                                Name: value,
-                            })),
-                            columns: [
-                                { data: 'Name' },
-                            ],
-                        });
+                    document.getElementById("myDataTable").innerHTML = ""
+                    $('#myDataTable').DataTable({
+                        data: Object.values(response.Activegroups).map(value => ({
+                            Name: value,
+                        })),
+                        columns: [
+                            { data: 'Name' },
+                        ],
                     });
-
                 },
 
             });
