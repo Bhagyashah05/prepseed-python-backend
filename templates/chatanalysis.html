@@ -96,16 +96,9 @@
         </form>
     </div>
     <table id="myDataTable" class="display" style="width:100%">
-        <thead>
-            <tr>
-                <th>Name</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Data rows will be inserted here -->
-        </tbody>
+        
     </table>
-    <script>
+    <script> 
         document.getElementById("chatAnalysis").addEventListener("submit", function (event) {
             event.preventDefault();
             if ($.fn.DataTable.isDataTable('#myDataTable')) {
@@ -180,7 +173,20 @@
                 },
 
             });
+            
             console.log("done")
+
+            
+    
+
+
+    });
+
+    $('table tbody tr').click(function () {
+        $(this).find('td:first').each(function () {
+          console.log($(this).text())
+        })
+        
         });
 
     </script>
